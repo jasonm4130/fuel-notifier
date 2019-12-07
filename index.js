@@ -6,10 +6,15 @@ const api = require('./request');
 const send_message = require('./message');
 const prices = require('./calc-fuel-price');
 const config = require('./config');
+const schedule = require('node-schedule');
 
-config.LOCATIONS.forEach(location => {
+let j = schedule.scheduleJob('0 * * * *', function(){
+   
+    config.LOCATIONS.forEach(location => {
 
-    getFuelInfo(location);
+        getFuelInfo(location);
+    
+    });
 
 });
 
