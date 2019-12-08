@@ -38,7 +38,7 @@ function getFuelInfo(location) {
     
         fs.open(fileName, 'r', function (err, fd) {
             if (err) {
-                fs.writeFile(fileName, currentFuelTrends, function (err) {
+                fs.writeFile(fileName, JSON.stringify(currentFuelTrends), function (err) {
                     if (err) {
                         console.log(err);
                     }
