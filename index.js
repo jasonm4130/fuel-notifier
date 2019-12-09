@@ -8,11 +8,17 @@ const prices = require('./calc-fuel-price');
 const config = require('./config');
 const schedule = require('node-schedule');
 
-let j = schedule.scheduleJob('0 * * * *', function(){
+// Store responses no JSON
+let location_data = {};
+
+let j = schedule.scheduleJob('*/5 * * * *', function(){
    
     config.LOCATIONS.forEach(location => {
 
         getFuelInfo(location);
+
+        console.log('fuel prices checked');
+        console.log(location_data);
     
     });
 
@@ -32,27 +38,21 @@ function getFuelInfo(location) {
             'priceIndicator': fuel_info_response.data.FairPrice.PriceIndicator,
         }
     
-        let fileName = `lat=${lat}&lng=${lng}&fueltype=${fuelType}lastFuelPrice.json`;
+        let fileName = `lat=${lat}&lng=${lng}&fueltype=${fuelType}`;
     
         let lastFuelPrice = null;
     
-        fs.open(fileName, 'r', function (err, fd) {
-            if (err) {
-                fs.writeFile(fileName, JSON.stringify(currentFuelTrends), function (err) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
-            } else {
-                lastFuelPrice = JSON.parse(fs.readFileSync(fileName));
-            }
-        });
+        if (location_data[fileName]) {
+            lastFuelPrice = location_data[fileName];
+        } else {
+            location_data[fileName] = currentFuelTrends;
+        }
     
         if (lastFuelPrice !== currentFuelTrends) {
     
             send_message.message(fuel_message(fuel_info_response), message_numbers);
     
-            fs.writeFile(fileName, JSON.stringify(currentFuelTrends));
+            location_data[fileName] = currentFuelTrends;
     
         }
     
