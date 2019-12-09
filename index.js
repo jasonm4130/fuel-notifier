@@ -7,11 +7,12 @@ const send_message = require('./message');
 const prices = require('./calc-fuel-price');
 const config = require('./config');
 const schedule = require('node-schedule');
+const _ = require('lodash');
 
 // Store responses no JSON
 let location_data = {};
 
-let j = schedule.scheduleJob('*/5 * * * *', function(){
+let j = schedule.scheduleJob('*/30 * * * *', function(){
    
     config.LOCATIONS.forEach(location => {
 
@@ -47,8 +48,11 @@ function getFuelInfo(location) {
         } else {
             location_data[fileName] = currentFuelTrends;
         }
+
+        console.log(!_.isEqual(lastFuelPrice, currentFuelTrends));
+        console.log(lastFuelPrice, currentFuelTrends);
     
-        if (lastFuelPrice !== currentFuelTrends) {
+        if (!_.isEqual(lastFuelPrice, currentFuelTrends)) {
     
             send_message.message(fuel_message(fuel_info_response), message_numbers);
     
