@@ -52,7 +52,7 @@ function getFuelInfo(location) {
     
             send_message.message(fuel_message(fuel_info_response), message_numbers);
     
-            fs.writeFileSync(fileName, JSON.stringify(currentFuelTrends));
+            fs.writeFile(fileName, JSON.stringify(currentFuelTrends));
     
         }
     
