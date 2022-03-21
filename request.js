@@ -1,23 +1,17 @@
-'use strict';
-
 const axios = require('axios');
 
-const fuel_info = (location) => {
-    let lat = location.LAT;
-    let lng = location.LNG;
-    let fuelType = location.FUEL_TYPE;
+const fuelInfo = (location) => {
+  const { lat, lng, fuelType } = location;
 
-    let requestUrl = `https://www.racq.com.au/ajaxPages/fuelprice/FairFuelPricesapi.ashx?lat=${lat}&lng=${lng}&fueltype=${fuelType}`;
+  const requestUrl = `https://www.racq.com.au/ajaxPages/fuelprice/FairFuelPricesapi.ashx?lat=${lat}&lng=${lng}&fueltype=${fuelType}`;
 
-    return axios({
-        method: 'get',
-        url: requestUrl,
-    })
-    .then((response) => {
-        return (response);
-    }, (error) => {
-        return (error);
-    });
-}
+  return axios({
+    method: 'get',
+    url: requestUrl,
+  }).then(
+    (response) => response,
+    (error) => error
+  );
+};
 
-exports.fuel_info = fuel_info;
+exports.fuelInfo = fuelInfo;

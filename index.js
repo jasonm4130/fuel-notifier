@@ -1,80 +1,83 @@
-'use strict';
-
 const fs = require('fs');
 
-const api = require('./request');
-const send_message = require('./message');
-const prices = require('./calc-fuel-price');
-const config = require('./config');
 const schedule = require('node-schedule');
 const _ = require('lodash');
+const api = require('./request');
+const sendMessage = require('./message');
+const prices = require('./calc-fuel-price');
+const config = require('./config');
 
 // Store responses no JSON
-let location_data = {};
+const locationData = {};
 
-let j = schedule.scheduleJob('*/30 * * * *', function(){
-   
-    config.LOCATIONS.forEach(location => {
+/**
+ * Function that generates the message to be sent
+ * @param {*} fuelInfo
+ * @returns
+ */
+function fuelMessage(fuelInfo) {
+  const advise = prices.advise(
+    fuelInfo.data.FairPrice.PriceFluctuation,
+    fuelInfo.data.FairPrice.PriceIndicator
+  );
 
-        getFuelInfo(location);
+  const trend = prices.trend(
+    fuelInfo.data.FairPrice.PriceFluctuation,
+    fuelInfo.data.FairPrice.PriceIndicator
+  );
 
-        console.log('fuel prices checked');
-        console.log(location_data);
-    
-    });
-
-});
+  return `The current advise is:
+  ${advise}
+  
+  The current trend is:
+  ${trend}
+  
+  Current average price is:
+  ${fuelInfo.data.FairPrice.RoundedPrice}`;
+}
 
 function getFuelInfo(location) {
+  // Get the data from the location
+  const { lat, lng, numbers, fuelType } = location;
 
-    let message_numbers = location.NUMBERS;
-    let lat = location.LAT;
-    let lng = location.LNG;
-    let fuelType = location.FUEL_TYPE;
+  api.fuelInfo(location).then((fuelInfoResponse) => {
+    const currentFuelTrends = {
+      priceFluctuation: fuelInfoResponse.data.FairPrice.PriceFluctuation,
+      priceIndicator: fuelInfoResponse.data.FairPrice.PriceIndicator,
+    };
 
-    api.fuel_info(location).then((fuel_info_response) => {
+    const fileName = `lat=${lat}&lng=${lng}&fueltype=${fuelType}`;
 
-        let currentFuelTrends = {
-            'priceFluctuation': fuel_info_response.data.FairPrice.PriceFluctuation,
-            'priceIndicator': fuel_info_response.data.FairPrice.PriceIndicator,
-        }
-    
-        let fileName = `lat=${lat}&lng=${lng}&fueltype=${fuelType}`;
-    
-        let lastFuelPrice = null;
-    
-        if (location_data[fileName]) {
-            lastFuelPrice = location_data[fileName];
-        } else {
-            location_data[fileName] = currentFuelTrends;
-        }
+    let lastFuelPrice = null;
 
-        console.log(!_.isEqual(lastFuelPrice, currentFuelTrends));
-        console.log(lastFuelPrice, currentFuelTrends);
-    
-        if (!_.isEqual(lastFuelPrice, currentFuelTrends)) {
-    
-            send_message.message(fuel_message(fuel_info_response), message_numbers);
-    
-            location_data[fileName] = currentFuelTrends;
-    
-        }
-    
-    });
+    if (locationData[fileName]) {
+      lastFuelPrice = locationData[fileName];
+    } else {
+      locationData[fileName] = currentFuelTrends;
+    }
 
+    console.log(!_.isEqual(lastFuelPrice, currentFuelTrends));
+    console.log(lastFuelPrice, currentFuelTrends);
+
+    if (
+      !_.isEqual(lastFuelPrice, currentFuelTrends) &&
+      prices.advise(
+        currentFuelTrends.priceFluctuation,
+        currentFuelTrends.priceIndicator
+      ) === 'Average price is good. Buy Now.'
+    ) {
+      sendMessage.message(fuelMessage(fuelInfoResponse), numbers);
+
+      locationData[fileName] = currentFuelTrends;
+    }
+  });
 }
 
-function fuel_message(fuel_info) {
-    let advise = prices.advise(fuel_info.data.FairPrice.PriceFluctuation, fuel_info.data.FairPrice.PriceIndicator);
+const j = schedule.scheduleJob('*/30 * * * *', () => {
+  config.LOCATIONS.forEach((location) => {
+    getFuelInfo(location);
 
-    let trend = prices.trend(fuel_info.data.FairPrice.PriceFluctuation, fuel_info.data.FairPrice.PriceIndicator);
-
-    return `The current advise is:
-${advise}
-
-The current trend is:
-${trend}
-
-Current average price is:
-${fuel_info.data.FairPrice.RoundedPrice}`;
-}
+    console.log('fuel prices checked');
+    console.log(locationData);
+  });
+});
