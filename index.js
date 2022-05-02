@@ -1,11 +1,11 @@
-const fs = require("fs");
+const fs = require('fs');
 
-const schedule = require("node-schedule");
-const _ = require("lodash");
-const api = require("./request");
-const sendMessage = require("./message");
-const prices = require("./calc-fuel-price");
-const config = require("./config");
+const schedule = require('node-schedule');
+const _ = require('lodash');
+const api = require('./request');
+const sendMessage = require('./message');
+const prices = require('./calc-fuel-price');
+const config = require('./config/config.json');
 
 // Store responses no JSON
 const locationData = {};
@@ -64,7 +64,7 @@ function getFuelInfo(location) {
       prices.advise(
         currentFuelTrends.priceFluctuation,
         currentFuelTrends.priceIndicator
-      ) === "Average price is good. Buy Now."
+      ) === 'Average price is good. Buy Now.'
     ) {
       sendMessage.message(fuelMessage(fuelInfoResponse), numbers);
 
@@ -73,11 +73,11 @@ function getFuelInfo(location) {
   });
 }
 
-const j = schedule.scheduleJob("0 8 * * *", () => {
+const j = schedule.scheduleJob('0 8 * * *', () => {
   config.LOCATIONS.forEach((location) => {
     getFuelInfo(location);
 
-    console.log("fuel prices checked");
+    console.log('fuel prices checked');
     console.log(locationData);
   });
 });

@@ -1,5 +1,5 @@
 const Twilio = require('twilio');
-const config = require('./config');
+const config = require('./config/config.json');
 
 const accountSid = config.ACCOUNT_SID;
 const authToken = config.AUTH_TOKEN;
