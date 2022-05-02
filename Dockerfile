@@ -10,7 +10,10 @@ COPY package*.json ./
 
 RUN npm install
 
+# Install PM2
+RUN npm install pm2 -g
+
 # Bundle app source
 COPY . .
 
-CMD [ "node", "index.js" ]
+CMD [ "pm2-runtime", "index.js" ]
