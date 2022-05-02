@@ -1,2 +1,4 @@
 node_modules
 npm-debug.log
+# Ignore the config file since it has our api keys
+config.json
