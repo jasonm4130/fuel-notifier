@@ -61,10 +61,12 @@ function getFuelInfo(location) {
 
     if (
       !_.isEqual(lastFuelPrice, currentFuelTrends) &&
-      prices.advise(
-        currentFuelTrends.priceFluctuation,
-        currentFuelTrends.priceIndicator
-      ) === 'Average price is good. Buy Now.'
+      prices
+        .advise(
+          currentFuelTrends.priceFluctuation,
+          currentFuelTrends.priceIndicator
+        )
+        .includes('good')
     ) {
       sendMessage.message(fuelMessage(fuelInfoResponse), numbers);
 
